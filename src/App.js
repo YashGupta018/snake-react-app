@@ -15,39 +15,62 @@ const App = () => {
   const [snake, setSnake] = useState(SNAKE_START);
   const [apple, setApple] = useState(APPLE_START);
   const [dir, setDir] = useState(0, -1);
-  const [speed, setSpeed] = useState(100);
+  const [speed, setSpeed] = useState(200);
   const [gameOver, setGameOver] = useState(false);
 
   const startGame = () => {
 
-
+    setSnake(SNAKE_START);
+    setApple(APPLE_START);
+    setDir([0, -1]);
+    setSpeed(SPEED);
+    setGameOver(false);
 
   }
 
   const endGame = () => {
 
-
+    setSpeed(null);
+    setGameOver(true);
 
   }
 
   const moveSnake = ({ keyCode }) => keyCode >= 37 && keyCode <= 40 && setDir(DIRECTIONS[keyCode]);
 
-  const createApple = () => {
+  const createApple = () => apple.map((_, i) => Math.floor(Math.random() * (CANVAS_SIZE[i]) / SCALE));
 
+  const checkCollision = (piece, snk = snake) => {
 
+    if (
+      piece[0] * SCALE >= CANVAS_SIZE[0] ||
+      piece[0] < 0 ||
+      piece[1] * SCALE >= CANVAS_SIZE[1] ||
+      piece[1] < 0
+    )
+
+    return true;
+
+    for (const segment of snk) {
+
+      if (piece[0] === segment[0] && piece[1] === segment[1]) return true;
+
+    }
+
+  return false;
 
   }
 
-  const checkCollision = () => {
+  const checkAppleCollision = newSnake => {
 
-
-
-  }
-
-  const checkAppleCollision = () => {
-
-
-
+    if (newSnake[0][0] === apple[0] && newSnake[0][1] === apple[1]){
+      let newApple = createApple();
+      while (checkCollision(newApple, newSnake)) {
+        newApple = createApple();
+      }
+      setApple(newApple);
+      return true;
+    }
+    return false;
   }
 
   const gameLoop = () => {
@@ -55,7 +78,8 @@ const App = () => {
     const snakeCopy = JSON.parse(JSON.stringify(snake)); // (snake copy) from snake object coz snake is a multi-dimensional array
     const newSnakeHead = [snakeCopy[0][0] + dir[0], snakeCopy[0][1] + dir[1]];
     snakeCopy.unshift(newSnakeHead);
-    snakeCopy.pop();
+    if (checkCollision(newSnakeHead)) endGame();
+    if (!checkAppleCollision(snakeCopy)) snakeCopy.pop();
     setSnake(snakeCopy);
 
   }
